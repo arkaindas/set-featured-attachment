@@ -9,7 +9,7 @@ Description: This plugin will create "set featured attachment" like "set feature
 License: GPLV2
 ***************************************************************************************************/
 
-class sfa { 
+class SFA { 
 	function sfa() {
 		// for set featured attachment metabox
 		add_action('add_meta_boxes',array(&$this,'sfa_meta_box' )); 
@@ -17,6 +17,11 @@ class sfa {
 		add_action('save_post', array(&$this,'save_sfa_attachment'));
 		// add enctype into the form
 		add_action('post_edit_form_tag', array(&$this,'update_sfa_form'));
+		// Add featured attachment to the content
+		add_filter( 'the_content',array(&$this,'sfa_alter_the_content'));
+		// Add shortcode of featured attachment
+		add_shortcode('the_post_attachment',array(&$this,'sfa_the_post_attachment'));
+		
 	}
 	function sfa_meta_box() {
 		// Define  set featured attachment for posts
@@ -28,16 +33,16 @@ class sfa {
        			$value = get_post_meta( $post->ID, 'sfa_attachment', true ); 
 	    		$html = '<p class="description">';
 			if(isset($value['url']) && !empty($value['url'])) {
-				$html .= '<a target="_blank" href="'.$value['url'].'" >';
-				$html .=basename($value['url']);
-				$html .= '</a>';
+				$html.= '<a target="_blank" href="'.$value['url'].'" >';
+				$html.=basename($value['url']);
+				$html.= '</a>';
  
 			}
 			else {
-				$html .= 'Upload your Attachment here.';
+				$html.= 'Upload your Attachment here.';
 			}
-	    		$html .= '</p>';
-	    		$html .= '<input id="sfa_attachment" name="sfa_attachment" value="" size="25" type="file">';
+	    		$html.= '</p>';
+	    		$html.= '<input id="sfa_attachment" name="sfa_attachment" value="" size="25" type="file">';
 	     		echo $html;
 	 
 		} 
@@ -77,5 +82,25 @@ class sfa {
 	function update_sfa_form() {
 		echo ' enctype="multipart/form-data"';
 	}
+	function sfa_alter_the_content( $content ) {
+		$post_id=$GLOBALS['post']->ID;
+		$sfa_attachment = get_post_meta( $post_id, 'sfa_attachment', true ); 
+		$post_attachment.='<a target="_blank" href="'.$sfa_attachment['url'].'" >';
+		$post_attachment.=basename($sfa_attachment['url']);
+		$post_attachment.='</a>';
+		$content =$content."<br/>".$post_attachment;
+		return $content;
+	}
+	function sfa_the_post_attachment( ) {
+		$post_id = get_the_ID();
+		if(!empty( $post_id )) {
+			$sfa_attachment = get_post_meta( $post_id, 'sfa_attachment', true ); 
+			$post_attachment.='<a target="_blank" href="'.$sfa_attachment['url'].'" >';
+			$post_attachment.=basename($sfa_attachment['url']);
+			$post_attachment.='</a>';
+			echo $post_attachment;
+		}
+		
+	}
 }
-$sfa=new sfa;
+$sfa=new SFA;
